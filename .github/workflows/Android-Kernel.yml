@@ -15,7 +15,9 @@ jobs:
     - name: Prepare Configuration
       run: |
         CONFIG_ENV=./Android-Kernel/config.env
-        awk -F '=' -v config="$CONFIG_ENV" '$0!="" && $0!~/^#/ { print $1 "=" $2 >> $GITHUB_ENV }' "$CONFIG_ENV"
+        cat $CONFIG_ENV | sed -e '/^$/d' -e '/^#/d' | while read line; do
+          echo "$line" >> $GITHUB_ENV
+        done
 
     - name: Set swap to 10G
       uses: pierotofy/set-swap-space@master
