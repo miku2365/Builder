@@ -174,7 +174,7 @@ jobs:
               echo "$line" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
             done        
         fi
-        cat arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} | grep -w "### GitHub Action ADD" -A 100 | | cut -d "=" -f 1 | while read line; do
+        cat arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} | grep -w "### GitHub Action ADD" -A 100 | cut -d "=" -f 1 | while read line; do
           pattern="# $line is not set"
           sed -i "/^$pattern/d" arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         done
