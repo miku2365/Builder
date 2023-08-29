@@ -156,9 +156,9 @@ jobs:
             # 提取变量值
             value=${var#*=}
             # 使用awk命令在配置文件中查找变量名，如果找到则替换为新的值，并输出echo语句，如果没找到则追加到文件末尾，并输出echo语句
-            # 注意：这里使用了gsub函数来转义变量值中的引号，以避免awk语法错误
+            # 注意：这里使用了-v选项来传递变量值，而不是直接在代码中插入变量值
             awk -v var="$var" -v name="$name" -v value="$value" -F '=' '
-            BEGIN {found=0; gsub(/"/, "\\\"", value)}
+            BEGIN {found=0}
               $1 == name {found=1; if ($2 != value) {print var; print "[🍨] " name ":" $2 "→" value > "/dev/stderr"} else {print}} 
               {print}
               END {if (!found) {print var; print "[+] " name > "/dev/stderr"}}
@@ -186,6 +186,7 @@ jobs:
           if [ ${{ env.DISABLE_CC_WERROR }} = true ]; then
               echo "CONFIG_CC_WERROR=n" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
           fi
+          cat arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
 
       - name: Setup ccache
         if: env.ENABLE_CCACHE == 'true'
