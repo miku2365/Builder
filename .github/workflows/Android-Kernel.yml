@@ -15,9 +15,11 @@ jobs:
       - name: Prepare Configuration
         run: |
           CONFIG_ENV=./Android-Kernel/config.env
-          cat $CONFIG_ENV | sed -e '/^$/d' -e '/^#/d' | while read line; do
-            echo "$line" >> $GITHUB_ENV
-          done
+          while IFS= read -r line; do
+            if [[ ! -z "$line" && "$line" != \#* ]]; then
+              echo "$line" >> $GITHUB_ENV
+            fi
+          done < "$CONFIG_ENV"
 
       - name: Set swap to 10G
         uses: pierotofy/set-swap-space@master
@@ -170,9 +172,9 @@ jobs:
           fi
           if [ ${{ env.CUSTOM_CONFIG }} = true ]; then
               CUSTOM_ENV=$GITHUB_WORKSPACE/Android-Kernel/meteoric.env
-              cat $CUSTOM_ENV | while read line; do
+              while IFS= read -r line; do
                 echo "$line" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-              done        
+              done < "$CUSTOM_ENV"    
           fi
           cat arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} | grep -w "### GitHub Action ADD" -A 100 | cut -d "=" -f 1 | while read line; do
             pattern="# $line is not set"
