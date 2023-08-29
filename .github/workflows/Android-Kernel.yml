@@ -145,33 +145,26 @@ jobs:
     - name: Setup Configuration for Kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        echo "CONFIG_SCHED_SMT=n" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_SLUB_DEBUG=n" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo 'CONFIG_QCOM_ADRENO_DEFAULT_GOVERNOR="simple_ondemand"' >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_WQ_POWER_EFFICIENT_DEFAULT=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_NET_SCH_DEFAULT=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_DEFAULT_CAKE=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo 'CONFIG_DEFAULT_NET_SCH="cake"' >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_NET_SCH_CAKE=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_TCP_CONG_ADVANCED=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_DEFAULT_BBR=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo 'CONFIG_DEFAULT_TCP_CONG="bbr"' >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_TCP_CONG_BBR=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_PM_WAKELOCKS_GC=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_KSM=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_MMU=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_HZ_100=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_HZ=100" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_SCHED_AUTOGROUP=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_CPU_IDLE=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_SPARSEMEM_VMEMMAP_ENABLE=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_SPARSEMEM_VMEMMAP=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_RCU_FAST_NO_HZ=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_ARM_QCOM_CPUFREQ_KRYO=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_LTO=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_LTO_CLANG=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_THINLTO=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-        echo "CONFIG_LTO_NONE=n" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        # 定义一个列表，包含所有要写入的变量和值
+        vars=(CONFIG_SCHED_SMT=n CONFIG_SLUB_DEBUG=n CONFIG_QCOM_ADRENO_DEFAULT_GOVERNOR="simple_ondemand" CONFIG_WQ_POWER_EFFICIENT_DEFAULT=y CONFIG_NET_SCH_DEFAULT=y CONFIG_DEFAULT_CAKE=y CONFIG_DEFAULT_NET_SCH="cake" CONFIG_NET_SCH_CAKE=y CONFIG_TCP_CONG_ADVANCED=y CONFIG_DEFAULT_BBR=y CONFIG_DEFAULT_TCP_CONG="bbr" CONFIG_TCP_CONG_BBR=y CONFIG_PM_WAKELOCKS_GC=y CONFIG_KSM=y CONFIG_MMU=y CONFIG_HZ_100=y CONFIG_HZ=100 CONFIG_SCHED_AUTOGROUP=y CONFIG_CPU_IDLE=y CONFIG_SPARSEMEM_VMEMMAP_ENABLE=y CONFIG_SPARSEMEM_VMEMMAP=y CONFIG_RCU_FAST_NO_HZ=y CONFIG_ARM_QCOM_CPUFREQ_KRYO=y CONFIG_LTO=y CONFIG_LTO_CLANG=y CONFIG_THINLTO=y CONFIG_LTO_NONE=n)
+        # 定义一个临时文件名
+        tmpfile=$(mktemp)
+        # 遍历列表中的每个变量和值
+        for var in "${vars[@]}"; do
+        # 提取变量名
+          name=${var%=*}
+          # 使用awk命令在配置文件中查找变量名，如果找到则替换为新的值，如果没找到则追加到文件末尾，并输出echo语句
+          awk -v var="$var" -v name="$name" -F '=' '
+            BEGIN {found=0}
+            $1 == name {print var; found=1; next}
+            {print}
+            END {if (!found) {print var; print "[+] " name > "/dev/stderr"}}
+          ' arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} > "$tmpfile"
+        # 将临时文件复制回配置文件
+        cp "$tmpfile" arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        done
+        # 删除临时文件
+        rm "$tmpfile"
         if [ ${{ env.ADD_KPROBES_CONFIG }} = true ]; then
             #echo "CONFIG_MODULES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
             #echo "CONFIG_KPROBES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
