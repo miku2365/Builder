@@ -156,9 +156,10 @@ jobs:
             # 提取变量值
             value=${var#*=}
             # 使用awk命令在配置文件中查找变量名，如果找到则替换为新的值，并输出echo语句，如果没找到则追加到文件末尾，并输出echo语句
+            # 注意：这里使用了gsub函数来转义变量值中的引号，以避免awk语法错误
             awk -v var="$var" -v name="$name" -v value="$value" -F '=' '
-              BEGIN {found=0}
-              $1 == name {print var; found=1; print "[🍨] " name ":" $2 "-" value > "/dev/stderr"; next}
+            BEGIN {found=0; gsub(/"/, "\\\"", value)}
+              $1 == name {found=1; if ($2 != value) {print var; print "[🍨] " name ":" $2 "→" value > "/dev/stderr"} else {print}} 
               {print}
               END {if (!found) {print var; print "[+] " name > "/dev/stderr"}}
             ' arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} > "$tmpfile"
