@@ -166,6 +166,8 @@ jobs:
           # 将临时文件复制回配置文件
           cp "$tmpfile" arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
           done
+          cat "$tmpfile"
+          cat arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
           # 删除临时文件
           rm "$tmpfile"
           if [ ${{ env.ADD_KPROBES_CONFIG }} = true ]; then
@@ -186,7 +188,6 @@ jobs:
           if [ ${{ env.DISABLE_CC_WERROR }} = true ]; then
               echo "CONFIG_CC_WERROR=n" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
           fi
-          cat arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
 
       - name: Setup ccache
         if: env.ENABLE_CCACHE == 'true'
