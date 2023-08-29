@@ -15,8 +15,6 @@ jobs:
       - name: Prepare Configuration
         run: |
           CONFIG_ENV=./Android-Kernel/config.env
-          pwd
-          echo "$GITHUB_WORKSPACE"
           cat $CONFIG_ENV | sed -e '/^$/d' -e '/^#/d' | while read line; do
             echo "$line" >> $GITHUB_ENV
           done
@@ -171,7 +169,7 @@ jobs:
               echo "CONFIG_CC_WERROR=n" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
           fi
           if [ ${{ env.CUSTOM_CONFIG }} = true ]; then
-              CUSTOM_ENV=../../Android-Kernel/meteoric.env
+              CUSTOM_ENV=$GITHUB_WORKSPACE/Android-Kernel/meteoric.env
               cat $CUSTOM_ENV | while read line; do
                 echo "$line" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
               done        
