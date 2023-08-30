@@ -176,9 +176,12 @@ jobs:
                 echo "$line" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
               done < "$CUSTOM_ENV"    
           fi
-          grep -w "### GitHub Action ADD" -A 100 arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} | cut -d "=" -f 1 | while IFS= read -r line || [ -n "$line" ]; do
-            pattern="# $line is not set"
-            sed -i "/^$pattern/d" arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+          end_line=$(grep -Fxn "### GitHub Action ADD" arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} | head -n 1 | cut -d ':' -f 1)
+          grep -Fx "### GitHub Action ADD" -A 100 arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} | tail -n +2 | cut -d "=" -f 1 | while IFS= read -r line || [ -n "$line" ]; do
+            num=$(grep -wnE "^$line|^#\s+$line is not set" arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} | head -n 1 | cut -d ':' -f 1)
+            if [ "$num" -lt "$end_line" ]; then
+              sed -i ${num}d arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            fi
           done
           grep -w "### GitHub Action ADD" -A 100 arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
 
